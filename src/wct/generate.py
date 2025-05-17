@@ -93,7 +93,9 @@ def main(style_img_dir,content_img_dir,save_dir, model_path, content_size_mult, 
         output = to_img(output,content_img)
         final_image = color_injection(os.path.join(content_img_dir,content_path),output, color_ratio)
         
-        save_path = os.path.join(save_dir, f"output_{x}.png")
+        
+        file_name = content_path.split(".")[0] + "_" + style_path.split(".")[0]
+        save_path = os.path.join(save_dir, file_name + ".png")
         
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
@@ -132,7 +134,7 @@ if __name__ == "__main__":
         "--device", type=str, default="cuda"
     )
     parser.add_argument(
-        "--limit_num", type=int, default = 1
+        "--limit_num", type=int, default = -1
     )
     
     main(
