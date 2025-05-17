@@ -40,6 +40,7 @@ def style_transfer(content_image, style_image, style_size):
             content_img_path=content_path,
             style_img_path=style_path,
             style_size=style_size,
+            alpha=0.7,
             apply_color_injection=True
         )
         rating=compute_rating(stylized)
@@ -84,7 +85,7 @@ with col2:
 
 # Style size selection
 st.subheader("Style Image Size")
-style_size = st.selectbox("Select style image size (pixels)", [150,300,500,700], index=0)
+style_size = st.selectbox("Select style image size (pixels)", [50,150,300,500,700], index=0)
 
 # Fusion button
 if st.button("Fusion"):

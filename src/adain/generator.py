@@ -136,46 +136,58 @@ class Generator:
         std = torch.tensor([0.229, 0.224, 0.225]).view(-1, 1, 1).to(tensor.device)
         return tensor * std + mean
 
-    def generate(self, dataloader, save_dir, num_to_vis=0, alpha=1.0, apply_color_injection=True):
+    def generate(self, content_dir, style_dir, output_dir,style_size=224, alpha=1.0, apply_color_injection=True):
         """
-        Generate stylized images for a batch of content-style pairs.
+        Generate stylized images for all content-style pairs from directories.
 
         Args:
-            dataloader: DataLoader with content, style, and output_name.
-            save_dir (str): Directory to save stylized images.
-            num_to_vis (int): Number of samples to visualize.
+            content_dir (str): Directory containing content images.
+            style_dir (str): Directory containing style images.
+            output_dir (str): Directory to save stylized images.
             alpha (float): Style strength parameter.
             apply_color_injection (bool): Whether to apply color injection.
         """
-        os.makedirs(save_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
         print("Generating and saving stylized images...")
 
-        for batch in dataloader:
-            content_tensor = batch["content"].to(self.device)
-            style_tensor = batch["style"].to(self.device)
-            output_names = batch["output_name"]
+        # Get lists of image files
+        content_images = [f for f in os.listdir(content_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+        style_images = [f for f in os.listdir(style_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
 
-            with torch.no_grad():
-                stylized_tensor = self.model(content_tensor, style_tensor, alpha=alpha, infer=True)
+        if not content_images or not style_images:
+            raise ValueError("No valid images found in content_dir or style_dir")
 
-            # Convert content tensors to images for size and color injection
-            content_images = [self._tensor_to_image(tensor) for tensor in content_tensor]
-            content_sizes = [img.size[::-1] for img in content_images]  # (height, width)
+        for content_file in content_images:
+            content_path = os.path.join(content_dir, content_file)
+            content_img = Image.open(content_path).convert("RGB")
+            content_size = content_img.size[::-1]  # (height, width)
+            content_name = os.path.splitext(content_file)[0]
 
-            # Postprocess stylized tensors
-            stylized_images = [self._postprocess_tensor(tensor, size) for tensor, size in zip(stylized_tensor, content_sizes)]
+            for style_file in style_images:
+                style_path = os.path.join(style_dir, style_file)
+                style_name = os.path.splitext(style_file)[0]
 
-            if apply_color_injection:
-                stylized_images = [self.color_injection(content_img, stylized_img)
-                                  for content_img, stylized_img in zip(content_images, stylized_images)]
+                # Preprocess images
+                content_tensor = self._preprocess_image(content_path, resize_size=224)
+                style_tensor = self._preprocess_image(style_path, resize_size=style_size)
 
-            for img, name in zip(stylized_images, output_names):
-                img.save(os.path.join(save_dir, name))
+                # Generate stylized image
+                with torch.no_grad():
+                    stylized_tensor = self.model(content_tensor, style_tensor, alpha=alpha, infer=True)[0]
+
+                # Postprocess
+                stylized_img = self._postprocess_tensor(stylized_tensor, content_size)
+
+                # Apply color injection
+                if apply_color_injection:
+                    stylized_img = self.color_injection(content_img, stylized_img)
+
+                # Save with naming convention
+                output_name = f"{content_name}_{style_name}.png"
+                output_path = os.path.join(output_dir, output_name)
+                stylized_img.save(output_path)
 
         print("Done generating and saving!")
-        if num_to_vis > 0:
-            print(f"Visualizing {num_to_vis} samples...")
-            self.visualize_samples(save_dir, num_to_vis)
 
     def generate_for_a_single_sample(self, content_img_path, style_img_path, alpha=1.0, style_size=224, apply_color_injection=True):
         """
@@ -195,7 +207,7 @@ class Generator:
         content_img = Image.open(content_img_path).convert("RGB")
         output_size = content_img.size[::-1]  # (height, width) for PIL, reversed for numpy/opencv
 
-        content_tensor = self._preprocess_image(content_img_path, resize_size=224)
+        content_tensor = self._preprocess_image(content_img_path, resize_size=512)
         style_tensor = self._preprocess_image(style_img_path, resize_size=style_size)
 
         with torch.no_grad():
@@ -208,47 +220,3 @@ class Generator:
 
         return output_img
 
-    def visualize_samples(self, src_dir, output_dir, num_samples):
-        """
-        Visualize a specified number of stylized images using matplotlib.
-
-        Args:
-            src_dir (str): Directory containing content and style images.
-            output_dir (str): Directory containing stylized images.
-            num_samples (int): Number of samples to visualize.
-        """
-        output_images = [img_name for img_name in os.listdir(output_dir) if img_name.endswith(('.png', '.jpg', '.jpeg'))]
-        if not output_images:
-            print("No images found in the output directory.")
-            return
-
-        num_samples = min(num_samples, len(output_images))
-        samples = random.sample(output_images, k=num_samples)
-
-        fig, ax = plt.subplots(nrows=num_samples, ncols=3, figsize=(12, 4 * num_samples))
-        if num_samples == 1:
-            ax = [ax]  # Ensure ax is iterable for single sample
-
-        for r, img_name in enumerate(samples):
-            try:
-                content_img_name, style_img_name, _ = img_name.split("___")
-                content_img = Image.open(os.path.join(src_dir, "contents", content_img_name + ".jpg"))
-                style_img = Image.open(os.path.join(src_dir, "styles", style_img_name + ".jpg"))
-                output_img = Image.open(os.path.join(output_dir, img_name))
-
-                ax[r][0].imshow(content_img)
-                ax[r][0].set_title("Content")
-                ax[r][0].axis("off")
-
-                ax[r][1].imshow(style_img)
-                ax[r][1].set_title("Style")
-                ax[r][1].axis("off")
-
-                ax[r][2].imshow(output_img)
-                ax[r][2].set_title("Output")
-                ax[r][2].axis("off")
-            except Exception as e:
-                print(f"Error visualizing {img_name}: {str(e)}")
-
-        plt.tight_layout()
-        plt.show()

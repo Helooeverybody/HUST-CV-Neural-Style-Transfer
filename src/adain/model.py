@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
-from .utils import compute_mean_std
+from src.adain.utils import compute_mean_std
 
 
 class Encoder(nn.Module):
