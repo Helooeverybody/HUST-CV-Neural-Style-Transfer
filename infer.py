@@ -21,8 +21,8 @@ from src.adain.generator import Generator
 import numpy as np
 from src.adain.model import StyleTransferModel
 
-content_dir = "test_data/contents/"
-style_dir = "test_data/styles"
+content_dir = "data/contents/"
+style_dir = "data/styles/"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 def run_wct(content_img_dir,style_img_dir,
             model_path = "models/wct", content_size_mult = 0.5, 
@@ -104,21 +104,19 @@ def run_patch_st(content_img_dir, style_img_dir, model_path = "models/patch_st/i
     return final_img
 
 
-def run_adain(content_img_dir, style_img_dir, model_path = "models/adain/model-ckp176.pth",
-              alpha=1.0, style_size=224, apply_color_injection=True,
+def run_adain(content_img_dir, style_img_dir, model_path = "models/adain/model-ckp240.pth",
+              alpha=1.0, c_size_ratio=0.5,s_size_ratio=0.5, retain_color=True,
               device = "cuda"):
-    device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
+    device = "cuda" if device == "cuda" and torch.cuda.is_available() else "cpu"
     content_img_dir = content_img_dir + ".jpg"
     style_img_dir = style_img_dir + ".jpg"
 
     content_path,style_path = os.path.join(content_dir,content_img_dir), os.path.join(style_dir, style_img_dir)
-
-    device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
-    model = StyleTransferModel(ckp = model_path, device = device)
+    model = StyleTransferModel(ckp = model_path)
     gen = Generator(model = model, device = device)
-    return gen.generate_for_a_single_sample(content_path, style_path, alpha = alpha,
-                                            style_size = style_size, 
-                                            apply_color_injection= apply_color_injection)
+    return gen.generate_single(content_path, style_path, alpha = alpha,
+                                            c_size_ratio=c_size_ratio,s_size_ratio=s_size_ratio, 
+                                            retain_color= retain_color)
 
 
 def predict(image, model_path = 'models/model_rating.pth'):
@@ -211,12 +209,12 @@ if __name__ == "__main__":
         )
         
     pred = predict(final_img, "models/model_rating.pth")
- #save the styled image
-save_dir = f"output/{parser.parse_args().model}"
-content_img_dir = parser.parse_args().content_img_dir
-style_img_dir = parser.parse_args().style_img_dir
-save_path = os.path.join(save_dir, f"{content_img_dir}_{style_img_dir}.jpg")
+    #save the styled image
+    save_dir = f"output/{parser.parse_args().model}"
+    content_img_dir = parser.parse_args().content_img_dir
+    style_img_dir = parser.parse_args().style_img_dir
+    save_path = os.path.join(save_dir, f"{content_img_dir}_{style_img_dir}.jpg")
 
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
-final_img.save(save_path)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    final_img.save(save_path)
