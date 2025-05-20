@@ -8,7 +8,7 @@ import os
 from src.adain.generator import Generator
 from src.adain.model import StyleTransferModel
 #initialize model
-model_path="models/adain/model-ckp176.pth"
+model_path="models/adain/model-ckp240.pth"
 model=StyleTransferModel(ckp=model_path).cuda()
 if model is None:
     st.error("Style transfer model not loaded. Please initialize the model.")
