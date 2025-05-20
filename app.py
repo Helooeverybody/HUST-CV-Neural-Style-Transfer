@@ -14,7 +14,7 @@ if model is None:
     st.error("Style transfer model not loaded. Please initialize the model.")
     st.stop()
 
-generator = Generator(model, device="auto", color_retention_ratio=1)
+generator = Generator(model, device="auto")
 
 def style_transfer(content_image, style_image, style_size):
     """
@@ -35,13 +35,15 @@ def style_transfer(content_image, style_image, style_size):
     style_image.save(style_path)
     
     try:
+        if style_size=="None":
+            style_size=None
         # Generate stylized image
-        stylized = generator.generate_for_a_single_sample(
-            content_img_path=content_path,
-            style_img_path=style_path,
-            style_size=style_size,
-            alpha=0.7,
-            apply_color_injection=True
+        stylized = generator.generate_single(
+            content_path=content_path,
+            style_path=style_path,
+            s_size=style_size,
+            alpha=1.0,
+            retain_color=True
         )
         rating=compute_rating(stylized)
     finally:
@@ -85,7 +87,7 @@ with col2:
 
 # Style size selection
 st.subheader("Style Image Size")
-style_size = st.selectbox("Select style image size (pixels)", [50,150,300,500,700], index=0)
+style_size = st.selectbox("Select style image size (pixels)", ["None",50,150,300,500,700], index=0)
 
 # Fusion button
 if st.button("Fusion"):
