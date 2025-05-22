@@ -16,7 +16,7 @@ Importantly, the evaluation metrics for these models are also a critical aspect 
 considered and compared.
 
 
-Our project will consist of two phases. In the first phase, we tackle the neural style transfer
+  Our project will consist of two phases. In the first phase, we tackle the neural style transfer
 problem by leveraging established models to learn content and style representations from a dataset
 of content and style images, and subsequently generate stylized images.The second phase
 functions as a standard regression task with three outputs corresponding to three users: here, we
