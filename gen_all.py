@@ -111,6 +111,16 @@ def gen_patch_st(content_img_dir = "data/contents",style_img_dir = "data/styles"
             os.makedirs(save_dir)
         final_img.save(save_path)
 
+from PIL import Image
+import os
+from PIL import Image
+import matplotlib.pyplot as plt
+import os
+from PIL import Image
+from infer import run_patch_st, run_wct, run_adain, run_transformer
+
+content_dir = "data/contents"
+style_dir = "data/styles"
 
 def display_style_transfer_grid(stylize_func, content_paths, style_paths, img_size=(256, 200), figsize_per_cell=(3, 3)):
     
@@ -163,7 +173,8 @@ def compare_style_models(
     content_paths,
     style_paths,
     img_size=(256, 200),
-    figsize_per_cell=(3, 3)
+    figsize_per_cell=(3, 3),
+    retain_color = False
 ):
     assert len(stylize_funcs) == len(model_names), "Each model must have a name."
     assert len(content_paths) == len(style_paths), "Content and style lists must be same length."
@@ -188,7 +199,7 @@ def compare_style_models(
         if i == 0:
             axes[i][0].set_title('Content', fontsize=12)
         for j, (func, name) in enumerate(zip(stylize_funcs, model_names), start=1):
-            stylized = func(c_path, s_path)
+            stylized = func(c_path, s_path, retain_color = retain_color)
             img = stylized.resize(img_size) if isinstance(stylized, Image.Image) else Image.fromarray(stylized).resize(img_size)
             axes[i][j].imshow(img)
             axes[i][j].axis('off')
@@ -202,10 +213,7 @@ def compare_style_models(
             axes[i][-1].set_title('Style', fontsize=12)
 
     plt.tight_layout()
-    plt.show()
-    
-   
-
+    plt.savefig("img_res/res.png")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
