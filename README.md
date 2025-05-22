@@ -1,7 +1,7 @@
 # Neural Style Transfer
 Data is available at: [data](https://github.com/victorkitov/style-transfer-dataset)
 
-Group 7 members:
+Group 9 members:
 - Nguyen Nhat Minh 20225510
 - Doi Sy Thang - 20225528
 - Ngo Duy Dat - 20225480
