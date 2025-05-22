@@ -16,7 +16,7 @@ Importantly, the evaluation metrics for these models are also a critical aspect 
 considered and compared.
 
 
-<p>Our project will consist of two phases. In the first phase, we tackle the neural style transfer
+Our project will consist of two phases. In the first phase, we tackle the neural style transfer
 problem by leveraging established models to learn content and style representations from a dataset
 of content and style images, and subsequently generate stylized images.The second phase
 functions as a standard regression task with three outputs corresponding to three users: here, we
@@ -24,7 +24,16 @@ freeze the weights of a pretrained ResNet and append several fully connected lay
 three regression outputs. This second phase is extremely straightforward, as we only use the
 dataset’s ratings to demonstrate that a model with strong metric performance does not necessarily
 achieve high subjective ratings, highlighting the challenge of evaluating metrics for applications
-that are inherently aesthetic and subject to individual taste.</p>
+that are inherently aesthetic and subject to individual taste.
+
+## 🧪 Model Performance Comparison
+
+| Model       | ArtFID   |   FID   | LPIPS  | G-LPIPS |  CFSD  |
+|-------------|----------|---------|--------|---------|--------|
+| Adain       |  39.31   |  24.28  | 0.55   | 0.43    |  0.26  |
+| WCT         |  39.67   |  24.53  | 0.55   | 0.58    |  0.34  |
+| Patch_st    |  49.52   |  28.76  | 0.66   | 0.5344  |  1.02  |
+| Transformer |  40.12   |  26.11  | 0.48   | 0.51    |  0.23  |
 
 ## Infer
 To infer styled image and get ratings, please type
