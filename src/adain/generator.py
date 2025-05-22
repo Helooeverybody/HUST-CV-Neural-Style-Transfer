@@ -9,34 +9,25 @@ import os
 import random
 import matplotlib.pyplot as plt
 from src.adain.utils import resize_image,color_injection,inverse_normalize
+
 class Generator:
     """A class for generating stylized images using a style transfer model with color injection."""
 
-    def __init__(self, model, device="auto"):
+    def __init__(self, model, device, color_retention_ratio=1.0):
         """
         Initialize the Generator with a style transfer model and device configuration.
 
         Args:
             model: The style transfer model (PyTorch model).
             device (str): Device to run the model on ("auto", "cuda", or "cpu").
+            color_retention_ratio (float): Ratio for blending content image colors (0 to 1).
         """
         self.model = model
-        self.device = self._resolve_device(device)
+        self.device = device
         self.model = self.model.to(self.device).eval()
+        self.color_retention_ratio = color_retention_ratio
 
-    def _resolve_device(self, device):
-        """Determine the computation device based on input and availability."""
-        device = device.lower()
-        if device == "auto":
-            return "cuda" if torch.cuda.is_available() else "cpu"
-        if device == "cuda" and not torch.cuda.is_available():
-            print("CUDA requested but not available. Falling back to CPU.")
-            return "cpu"
-        print(f"Using device: {device.upper()}")
-        return device
-
-    
-
+  
     def _preprocess_image(self, img):
         try:
             img=np.array(img)
@@ -141,4 +132,3 @@ class Generator:
             output_img = color_injection(c_img, output_img,color_retention_ratio)
 
         return output_img
-

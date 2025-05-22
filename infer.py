@@ -20,15 +20,20 @@ from src.rating_model.model import RatingModel
 from src.adain.generator import Generator
 import numpy as np
 from src.adain.model import StyleTransferModel
+from src.transformer.infer import infer
+
 
 content_dir = "data/contents/"
-style_dir = "data/styles/"
+style_dir = "data/styles"
 device = "cuda" if torch.cuda.is_available() else "cpu"
-def run_wct(content_img_dir,style_img_dir,
+
+
+def run_wct(content_img_dir,style_img_dir, retain_color = True,
             model_path = "models/wct", content_size_mult = 0.5, 
-            style_size_mult = 0.5, alpha = 1, color_ratio = 1,
+            style_size_mult = 0.5, alpha = 1, 
             device = "cuda"):
-    device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")  #comment it if memory of gpu is available
     content_img_dir = content_img_dir + ".jpg"
     style_img_dir = style_img_dir + ".jpg"
     model = MultiLevelAE_OST(pretrained_path_dir=model_path).to(device)
@@ -47,18 +52,23 @@ def run_wct(content_img_dir,style_img_dir,
         style = to_tensor(style).to(device)
         output = model(content, style,alpha=alpha)
     output = to_img(output,content_img)
-    final_image = color_injection(content_path,output, color_ratio)
+    
+    final_image = color_injection(content_path,output, retain_color)
     if isinstance(final_image, np.ndarray):
         final_image = Image.fromarray(styled)
-
         styled = final_image.resize(content_img.size, resample=Image.BICUBIC) 
     return final_image
 
-def run_patch_st(content_img_dir, style_img_dir, model_path = "models/patch_st/inverse_net.pth", 
+
+
+
+def run_patch_st(content_img_dir, style_img_dir,  retain_color = True,
+                 model_path = "models/patch_st/inverse_net.pth", 
                  resize_percent_content = 50, 
-                 resize_percent_style = 50, match_color = True,
+                 resize_percent_style = 50, 
                  device = "cuda"):
-    device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")   #comment it if memory of gpu is available
     content_img_dir = content_img_dir + ".jpg"
     style_img_dir = style_img_dir + ".jpg"
 
@@ -77,7 +87,7 @@ def run_patch_st(content_img_dir, style_img_dir, model_path = "models/patch_st/i
     style_img_proc = resize_pil_image(style_img, resize_percent_style)
 
 
-    if match_color:
+    if retain_color:
         style_img_proc = match_color_lab(content_img_proc, style_img_proc)
 
     content_img_proc = preprocess_image(content_img_proc, device)
@@ -104,19 +114,37 @@ def run_patch_st(content_img_dir, style_img_dir, model_path = "models/patch_st/i
     return final_img
 
 
-def run_adain(content_img_dir, style_img_dir, model_path = "models/adain/model-ckp240.pth",
-              alpha=1.0, c_size_ratio=0.5,s_size_ratio=0.5, retain_color=True,
+
+
+def run_adain(content_img_dir, style_img_dir, retain_color=True,
+              model_path = "models/adain/model-ckp240.pth",
+              alpha=1.0, c_size_ratio=0.5,s_size_ratio=0.5, 
               device = "cuda"):
-    device = "cuda" if device == "cuda" and torch.cuda.is_available() else "cpu"
+    #device = torch.device("cuda" if device == "cuda" and torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")    #comment it if memory of gpu is available
     content_img_dir = content_img_dir + ".jpg"
     style_img_dir = style_img_dir + ".jpg"
 
     content_path,style_path = os.path.join(content_dir,content_img_dir), os.path.join(style_dir, style_img_dir)
-    model = StyleTransferModel(ckp = model_path)
+    model = StyleTransferModel(ckp = model_path, device = device)
     gen = Generator(model = model, device = device)
     return gen.generate_single(content_path, style_path, alpha = alpha,
                                             c_size_ratio=c_size_ratio,s_size_ratio=s_size_ratio, 
                                             retain_color= retain_color)
+
+
+
+
+
+
+def run_transformer(content_img_dir , style_img_dir,retain_color=True):
+    _,content_id_str = content_img_dir.split("_", 1)
+    _,style_id_str = style_img_dir.split("_",1)
+    content_id = int(content_id_str)
+    style_id = int(style_id_str)
+    return infer(content_id, style_id, retain_color)
+
+
 
 
 def predict(image, model_path = 'models/model_rating.pth'):
@@ -135,16 +163,20 @@ def predict(image, model_path = 'models/model_rating.pth'):
     return output[0][0] * 10
 
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model", type = str, default = "adain"
+        "--model", type = str, default = "transformer"
     )
     parser.add_argument(
-        "--content_img_dir", type=str, default = "content_1"
+        "--content_img_dir", type=str, default = "content_5"
     )
     parser.add_argument(
-        "--style_img_dir", type=str, default = "style_1"
+        "--style_img_dir", type=str, default = "style_10"
+    )
+    parser.add_argument(
+        "--retain_color", type = bool, default = False
     )
     parser.add_argument(
         "--content_size_mult", type=int, default=0.5
@@ -156,23 +188,15 @@ if __name__ == "__main__":
         "--alpha", type=int, default=1
     )
     parser.add_argument(
-        "--color_ratio", type=int, default=1
-    )
-    parser.add_argument(
         "--resize_percent_content", type=int, default = 50
     )
     parser.add_argument(
         "--resize_percent_style", type=int, default = 50
     )
     parser.add_argument(
-        "--match_color", type = bool, default = True
-    )
-    parser.add_argument(
         "--alpha_adain", type = int, default = 1.0
     )
-    parser.add_argument(
-        "--apply_color_injection", type = bool, default = True
-    )
+   
     content_img_dir = parser.parse_args().content_img_dir + ".jpg"
     style_img_dir = parser.parse_args().style_img_dir + ".jpg"
     content_path,style_path = os.path.join(content_dir,content_img_dir),\
@@ -182,12 +206,13 @@ if __name__ == "__main__":
     if parser.parse_args().model == "wct":
         #get the styled image
         final_img = run_wct(
-            style_img_dir=parser.parse_args().style_img_dir,
-            content_img_dir=parser.parse_args().content_img_dir,
+            content_img_dir = parser.parse_args().content_img_dir, 
+            style_img_dir = parser.parse_args().style_img_dir, 
+            retain_color=parser.parse_args().retain_color,
             content_size_mult=parser.parse_args().content_size_mult,
             style_size_mult=parser.parse_args().style_size_mult,
             alpha=parser.parse_args().alpha,
-            color_ratio=parser.parse_args().color_ratio,
+           
         )
        
     elif parser.parse_args().model == "patch_st":
@@ -195,19 +220,26 @@ if __name__ == "__main__":
         final_img = run_patch_st(
             content_img_dir = parser.parse_args().content_img_dir, 
             style_img_dir = parser.parse_args().style_img_dir,  
+            retain_color=parser.parse_args().retain_color,
             resize_percent_content = parser.parse_args().resize_percent_content, 
-            resize_percent_style = parser.parse_args().resize_percent_style, 
-            match_color = parser.parse_args().match_color,
+            resize_percent_style = parser.parse_args().resize_percent_style,   
         )
+
     elif parser.parse_args().model == "adain":
         final_img = run_adain(
             content_img_dir = parser.parse_args().content_img_dir, 
             style_img_dir = parser.parse_args().style_img_dir, 
+            retain_color=parser.parse_args().retain_color,
             alpha= parser.parse_args().alpha_adain, 
-            style_size=224, 
-            apply_color_injection=parser.parse_args().apply_color_injection,
+           
         )
-        
+    elif parser.parse_args().model == "transformer":
+        final_img = run_transformer(
+            content_img_dir = parser.parse_args().content_img_dir, 
+            style_img_dir = parser.parse_args().style_img_dir,  
+            retain_color=parser.parse_args().retain_color,
+        )
+
     pred = predict(final_img, "models/model_rating.pth")
     #save the styled image
     save_dir = f"output/{parser.parse_args().model}"

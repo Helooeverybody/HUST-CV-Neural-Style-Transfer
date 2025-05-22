@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
-from src.adain.utils import compute_mean_std
+from .utils import compute_mean_std
 
 
 class Encoder(nn.Module):
@@ -78,13 +78,13 @@ class AdaIn:
         return output
 
 class StyleTransferModel(nn.Module):
-    def __init__(self,ckp=None):
+    def __init__(self,device, ckp=None):
         super().__init__()
         self.encoder=Encoder()
         self.adain=AdaIn()
         self.decoder=Decoder()
         if ckp:
-          self.decoder.load_state_dict(torch.load(ckp)['model'])
+          self.decoder.load_state_dict(torch.load(ckp,map_location=device)['model'])
     def encoder_forward(self,x,return_last=False):
         return self.encoder(x,return_last=return_last)
     def generate(self,c_feats: torch.Tensor,s_feats: torch.Tensor,
