@@ -11,11 +11,12 @@ Group 9 members:
 ## Project Description
 
 ## Infer
-To infer styled image, please type
+To infer styled image and get ratings, please type
 ```
 python infer.py --model transformer --content_img_dir content_5 --style_img_dir style_10 --retain_color True
 ```
-and you can easily change model transformer with adain, wct, patch_st
+You can easily change model transformer with adain, wct, patch_st, and retain_color= False to ensure
+color styled following the style image. The stylised image will be save in folder output/modelname
 ## UI guide
 
 
