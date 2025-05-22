@@ -12,16 +12,24 @@ st.set_page_config(layout="wide")
 
 def style_transfer(c_name, s_name, style_size_ratio, model_type, alpha=1.0, retain_color=True):
     if model_type == "adain":
-        stylized = run_adain(c_name, s_name, alpha=alpha, c_size_ratio=0.5,
-                             s_size_ratio=style_size_ratio, retain_color=retain_color)
+        stylized = run_adain(c_name, s_name, retain_color=retain_color,
+                             alpha=alpha, c_size_ratio=0.5,
+                             s_size_ratio=style_size_ratio,
+                             )
     elif model_type == "wct":
-        stylized = run_wct(c_name, s_name, content_size_mult=0.5,
+        stylized = run_wct(c_name, s_name, retain_color=retain_color,
+                           content_size_mult=0.5,
                            style_size_mult=style_size_ratio, alpha=alpha,
-                           color_ratio=1 if retain_color else 0)
+                           )
     elif model_type == "patch_st":
-        stylized = run_patch_st(c_name, s_name, resize_percent_content=50,
+        stylized = run_patch_st(c_name, s_name,retain_color=retain_color,
+                                resize_percent_content=50,
                                 resize_percent_style=style_size_ratio*100,
-                                match_color=retain_color)
+                                )
+    elif model_type == "transformer":
+        stylized = run_transformer(c_name, s_name, 
+                                   retain_color=retain_color,
+                                   )
     else:
         raise ValueError("Invalid model type")
     rating = predict(stylized, "models/model_rating.pth")
@@ -64,7 +72,7 @@ with st.sidebar:
         style_image = None
 
     st.subheader("Model Selection")
-    model_type = st.selectbox("Select Model", ["adain", "wct", "patch_st", "all"], index=0)
+    model_type = st.selectbox("Select Model", ["adain", "wct", "patch_st","transformer", "all"], index=0)
 
     st.subheader("Style Image Size")
     style_size_ratio = st.slider("Select style image size ", 0.1, 1.0, 0.5, 0.1)
@@ -107,9 +115,9 @@ if 'content_image' in locals() and 'style_image' in locals() and content_image i
                 if model_type == "all":
 
                     # New three columns for all results
-                    results_col1, results_col2, results_col3 = st.columns(3)
+                    results_col1, results_col2, results_col3, results_col4 = st.columns(4)
                     results = {}
-                    for mt in ["adain", "wct", "patch_st"]:
+                    for mt in ["adain", "wct", "patch_st", "transformer"]:
                         stylized_image, rating = style_transfer(c_name, s_name, 
                                                                 style_size_ratio, mt, 
                                                                 alpha=alpha, retain_color=retain_color)
@@ -119,7 +127,8 @@ if 'content_image' in locals() and 'style_image' in locals() and content_image i
                         torch.cuda.empty_cache()
                         gc.collect()
                     resized_adain, resized_wct = resize_to_same_height(results["adain"][0], results["wct"][0])
-                    _, resized_patchst = resize_to_same_height(results["patch_st"][0], results["wct"][0])
+                    resized_patchst, resized_transformer = resize_to_same_height(results["patch_st"][0], results["transformer"][0])
+                   
 
                     with results_col1:
                         st.subheader("AdaIN Output")
@@ -144,6 +153,13 @@ if 'content_image' in locals() and 'style_image' in locals() and content_image i
                         buffered = io.BytesIO()
                         results["patch_st"][0].save(buffered, format="PNG")
                         st.download_button(label="Download PatchST", data=buffered.getvalue(), file_name=f"patch_st_{c_name}___{s_name}.png", mime="image/png")
+                    with results_col4:
+                        st.subheader("Transformer Output")
+                        st.image(resized_transformer, caption=f"Transformer ({content_image.size[0]}x{content_image.size[1]}")
+                        st.write(f"Rating: {results['transformer'][1]}")
+                        buffered = io.BytesIO()
+                        results["transformer"][0].save(buffered, format="PNG")
+                        st.download_button(label="Download Transformer", data=buffered.getvalue(), file_name=f"transformer_{c_name}___{s_name}.png", mime="image/png")
                 else:
                     # Use the same three columns for preview and result
                     with preview_col3:
