@@ -35,6 +35,9 @@ that are inherently aesthetic and subject to individual taste.
 | Transfomrer |  49.52   |  28.76  | 0.66   | 0.53    |  1.02  |
 | Adain       |  40.12   |  26.11  | 0.48   | 0.51    |  0.23  |
 
+![res1](https://github.com/user-attachments/assets/4d36be76-979d-4985-8c2a-49913c2c3afb)
+
+
 ## Infer
 To infer styled image and get ratings, please type
 ```
