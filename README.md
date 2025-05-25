@@ -30,10 +30,10 @@ that are inherently aesthetic and subject to individual taste.
 
 | Model       | ArtFID   |   FID   | LPIPS  | G-LPIPS |  CFSD  |
 |-------------|----------|---------|--------|---------|--------|
-| Adain       |  39.31   |  24.28  | 0.55   | 0.43    |  0.26  |
+| Patch_st    |  39.31   |  24.28  | 0.55   | 0.43    |  0.26  |
 | WCT         |  39.67   |  24.53  | 0.55   | 0.58    |  0.34  |
-| Patch_st    |  49.52   |  28.76  | 0.66   | 0.53    |  1.02  |
-| Transformer |  40.12   |  26.11  | 0.48   | 0.51    |  0.23  |
+| Transfomrer |  49.52   |  28.76  | 0.66   | 0.53    |  1.02  |
+| Adain       |  40.12   |  26.11  | 0.48   | 0.51    |  0.23  |
 
 ## Infer
 To infer styled image and get ratings, please type
