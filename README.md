@@ -32,7 +32,7 @@ that are inherently aesthetic and subject to individual taste.
 |-------------|----------|---------|--------|---------|--------|
 | Patch_st    |  39.31   |  24.28  | 0.55   | 0.43    |  0.26  |
 | WCT         |  39.67   |  24.53  | 0.55   | 0.58    |  0.34  |
-| Transfomrer |  49.52   |  28.76  | 0.66   | 0.53    |  1.02  |
+| Transfomrer |  36.06   |  43.76  | 0.40   | 0.51    |  0.21  |
 | Adain       |  40.12   |  26.11  | 0.48   | 0.51    |  0.23  |
 
 ![res1](https://github.com/user-attachments/assets/4d36be76-979d-4985-8c2a-49913c2c3afb)
